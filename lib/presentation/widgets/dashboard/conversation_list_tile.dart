@@ -20,10 +20,13 @@ class ConversationListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: conversation.unreadCount > 0
-              ? Colors.black.withOpacity(0.1)
-              : Colors.grey.shade200,
-          width: conversation.unreadCount > 0 ? 1.5 : 1,
+          // Removed highlighting based on unread count
+          // color: conversation.unreadCount > 0
+          //     ? Colors.black.withOpacity(0.1)
+          //     : Colors.grey.shade200,
+          // width: conversation.unreadCount > 0 ? 1.5 : 1,
+          color: Colors.grey.shade200,
+          width: 1,
         ),
       ),
       child: InkWell(
@@ -38,15 +41,19 @@ class ConversationListTile extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: conversation.unreadCount > 0
-                        ? Colors.black
-                        : Colors.grey.shade300,
+                    // Removed highlighting based on unread count
+                    // backgroundColor: conversation.unreadCount > 0
+                    //     ? Colors.black
+                    //     : Colors.grey.shade300,
+                    backgroundColor: Colors.grey.shade300,
                     child: Text(
                       _getInitials(),
                       style: TextStyle(
-                        color: conversation.unreadCount > 0
-                            ? Colors.white
-                            : Colors.grey.shade700,
+                        // Removed highlighting based on unread count
+                        // color: conversation.unreadCount > 0
+                        //     ? Colors.white
+                        //     : Colors.grey.shade700,
+                        color: Colors.grey.shade700,
                         fontWeight: FontWeight.w600,
                         fontSize: 18,
                       ),
@@ -87,9 +94,11 @@ class ConversationListTile extends StatelessWidget {
                           child: Text(
                             conversation.conversationName ?? 'Unknown',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: conversation.unreadCount > 0
-                                      ? FontWeight.w700
-                                      : FontWeight.w600,
+                                  // Removed highlighting based on unread count
+                                  // fontWeight: conversation.unreadCount > 0
+                                  //     ? FontWeight.w700
+                                  //     : FontWeight.w600,
+                                  fontWeight: FontWeight.w600,
                                 ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -111,12 +120,15 @@ class ConversationListTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: conversation.unreadCount > 0
-                                ? Colors.black87
-                                : Colors.grey.shade600,
-                            fontWeight: conversation.unreadCount > 0
-                                ? FontWeight.w500
-                                : FontWeight.normal,
+                            // Removed highlighting based on unread count
+                            // color: conversation.unreadCount > 0
+                            //     ? Colors.black87
+                            //     : Colors.grey.shade600,
+                            // fontWeight: conversation.unreadCount > 0
+                            //     ? FontWeight.w500
+                            //     : FontWeight.normal,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.normal,
                           ),
                     ),
                   ],
@@ -132,41 +144,45 @@ class ConversationListTile extends StatelessWidget {
                     Text(
                       _formatTime(conversation.lastMessageAt!),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: conversation.unreadCount > 0
-                                ? Colors.black
-                                : Colors.grey.shade500,
-                            fontWeight: conversation.unreadCount > 0
-                                ? FontWeight.w600
-                                : FontWeight.normal,
+                            // Removed highlighting based on unread count
+                            // color: conversation.unreadCount > 0
+                            //     ? Colors.black
+                            //     : Colors.grey.shade500,
+                            // fontWeight: conversation.unreadCount > 0
+                            //     ? FontWeight.w600
+                            //     : FontWeight.normal,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.normal,
                           ),
                     ),
-                  if (conversation.unreadCount > 0)
-                    Container(
-                      margin: const EdgeInsets.only(top: 6),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 20,
-                        minHeight: 20,
-                      ),
-                      child: Text(
-                        conversation.unreadCount > 99
-                            ? '99+'
-                            : conversation.unreadCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                  // Removed unread count badge
+                  // if (conversation.unreadCount > 0)
+                  //   Container(
+                  //     margin: const EdgeInsets.only(top: 6),
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 8,
+                  //       vertical: 2,
+                  //     ),
+                  //     decoration: const BoxDecoration(
+                  //       color: Colors.black,
+                  //       shape: BoxShape.circle,
+                  //     ),
+                  //     constraints: const BoxConstraints(
+                  //       minWidth: 20,
+                  //       minHeight: 20,
+                  //     ),
+                  //     child: Text(
+                  //       conversation.unreadCount > 99
+                  //           ? '99+'
+                  //           : conversation.unreadCount.toString(),
+                  //       style: const TextStyle(
+                  //         color: Colors.white,
+                  //         fontSize: 11,
+                  //         fontWeight: FontWeight.w600,
+                  //       ),
+                  //       textAlign: TextAlign.center,
+                  //     ),
+                  //   ),
                 ],
               ),
             ],
