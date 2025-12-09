@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/image/heptanetlogo.png', height: 96),
+            Image.asset('assets/image/heptanetlogo_with_desc.png', height: 96),
             const SizedBox(height: 24),
             Text(
               'HeptaNet',

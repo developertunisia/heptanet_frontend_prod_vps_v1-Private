@@ -131,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           // Logo Heptagon Network (assurez-vous d'ajouter l'asset)
                           Image.asset(
-                            'assets/image/heptanetlogo.png',
+                            'assets/image/heptanetlogo_with_desc.png',
                             height: 72,
                           ),
                         ],
