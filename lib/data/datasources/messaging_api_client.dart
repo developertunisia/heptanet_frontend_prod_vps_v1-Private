@@ -360,8 +360,7 @@ class MessagingApiClient {
         );
 
     print('📥 Response status: ${response.statusCode}');
-    print('📥 Response body: ${response.body}');
-
+    // Ne pas logger tout le body (peut être très long), mais logger un échantillon pour les messages audio
     if (response.statusCode == 200) {
       final dynamic decodedBody = json.decode(response.body);
       
@@ -379,6 +378,25 @@ class MessagingApiClient {
                 []) as List<dynamic>;
       } else {
         data = [];
+      }
+      
+      // DEBUG: Vérifier les messages audio et leur durée
+      print('🔍 [API RESPONSE] Nombre de messages reçus: ${data.length}');
+      for (var msgJson in data) {
+        if (msgJson is Map<String, dynamic>) {
+          final type = msgJson['type'];
+          final messageId = msgJson['messageId'];
+          if (type == 2 || (type is String && type.contains('audio'))) {
+            final attachments = msgJson['attachments'] as List<dynamic>?;
+            if (attachments != null && attachments.isNotEmpty) {
+              final att = attachments[0] as Map<String, dynamic>;
+              print('🔍 [API RESPONSE] ⚠️ Message audio $messageId - durationSeconds dans JSON: ${att['durationSeconds']} (type: ${att['durationSeconds']?.runtimeType})');
+              print('   - Attachment complet: $att');
+            } else {
+              print('⚠️ [API RESPONSE] Message audio $messageId - PAS D\'ATTACHMENTS!');
+            }
+          }
+        }
       }
       
       return data.map((json) => MessageResponseDto.fromJson(json as Map<String, dynamic>)).toList();
@@ -517,7 +535,19 @@ class MessagingApiClient {
         throw Exception('Unexpected response format');
       }
       
-      return MessageResponseDto.fromJson(messageData);
+      // Debug: Vérifier les attachments et leur durée
+      if (messageData.containsKey('attachments') && messageData['attachments'] is List) {
+        final attachments = messageData['attachments'] as List;
+        print('🔍 Attachments count: ${attachments.length}');
+        for (var i = 0; i < attachments.length; i++) {
+          final att = attachments[i] as Map<String, dynamic>;
+          print('🔍 Attachment $i - durationSeconds: ${att['durationSeconds']}');
+        }
+      }
+      
+      final message = MessageResponseDto.fromJson(messageData);
+      print('🔍 Message parsed - audioAttachment durationSeconds: ${message.audioAttachment?.durationSeconds}');
+      return message;
     } else {
       throw Exception('Failed to send voice message: ${response.data}');
     }

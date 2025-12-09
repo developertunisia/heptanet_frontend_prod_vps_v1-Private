@@ -264,13 +264,30 @@ class _ChatViewState extends State<ChatView> {
           
           // Utiliser la durée du message depuis son attachment, ou la durée actuelle si en cours de lecture
           Duration? messageDuration;
-          if (isPlaying && _currentAudioDuration != null) {
-            // Si le message est en cours de lecture, utiliser la durée du lecteur pour la barre de progression
+          
+          // PRIORITÉ 1: Si en cours de lecture, utiliser la durée du lecteur (pour barre de progression en temps réel)
+          if (isPlaying && _currentAudioDuration != null && _currentAudioDuration!.inSeconds > 0) {
             messageDuration = _currentAudioDuration;
-          } else if (message.audioAttachment?.durationSeconds != null) {
-            // Sinon, utiliser la durée stockée dans le message
-            messageDuration = Duration(seconds: message.audioAttachment!.durationSeconds!);
+          } 
+          // PRIORITÉ 2: TOUJOURS utiliser la durée stockée dans l'attachment pour l'affichage
+          // CRITIQUE: Passer la durée même si elle est 0 ou null, le widget doit l'afficher
+          else {
+            // Chercher la durée dans l'attachment audio
+            final audioAtt = message.audioAttachment;
+            if (audioAtt != null && audioAtt.durationSeconds != null && audioAtt.durationSeconds! > 0) {
+              messageDuration = Duration(seconds: audioAtt.durationSeconds!);
+            } 
+            // Si pas trouvé dans audioAttachment, chercher dans tous les attachments
+            else if (message.attachments.isNotEmpty) {
+              for (var att in message.attachments) {
+                if (att.contentType.startsWith('audio/') && att.durationSeconds != null && att.durationSeconds! > 0) {
+                  messageDuration = Duration(seconds: att.durationSeconds!);
+                  break;
+                }
+              }
+            }
           }
+          // Si toujours null, le widget utilisera directement attachment.durationSeconds depuis le message
           
           return Column(
             children: [

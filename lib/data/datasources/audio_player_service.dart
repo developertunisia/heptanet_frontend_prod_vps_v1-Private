@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
+import 'dart:io';
 
 class AudioPlayerService {
   final AudioPlayer _player = AudioPlayer();
@@ -7,6 +8,9 @@ class AudioPlayerService {
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration>? _durationSubscription;
   StreamSubscription<PlayerState>? _stateSubscription;
+  
+  // Protection contre les appels simultanés pour getLocalDuration
+  bool _isCalculatingDuration = false;
 
   // Streams pour notifier l'UI
   final _positionController = StreamController<Duration>.broadcast();
@@ -91,12 +95,107 @@ class AudioPlayerService {
   }
 
   /// Obtenir la durée d'un fichier audio local
+  /// Utilise le stream onDurationChanged pour une méthode plus fiable
   Future<Duration?> getLocalDuration(String filePath) async {
+    // Protection contre les appels simultanés
+    if (_isCalculatingDuration) {
+      print('⚠️ [DURÉE] Un calcul de durée est déjà en cours, attente...');
+      // Attendre un peu et réessayer une seule fois
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (_isCalculatingDuration) {
+        print('⚠️ [DURÉE] Le calcul précédent est toujours en cours, abandon');
+        return null;
+      }
+    }
+    
+    _isCalculatingDuration = true;
+    AudioPlayer? tempPlayer;
+    StreamSubscription<Duration>? durationSubscription;
+    
     try {
-      await _player.setSource(DeviceFileSource(filePath));
-      return await _player.getDuration();
+      // Vérifier que le fichier existe
+      final file = File(filePath);
+      if (!await file.exists()) {
+        print('⚠️ [DURÉE] Fichier n\'existe pas: $filePath');
+        _isCalculatingDuration = false;
+        return null;
+      }
+
+      // Créer un player temporaire pour éviter les conflits avec le player principal
+      tempPlayer = AudioPlayer();
+      
+      // Utiliser un Completer pour attendre la durée depuis le stream
+      final completer = Completer<Duration?>();
+      Duration? finalDuration;
+      
+      // Écouter le stream onDurationChanged qui est plus fiable
+      durationSubscription = tempPlayer.onDurationChanged.listen((duration) {
+        if (duration != null && duration.inSeconds > 0 && !completer.isCompleted) {
+          finalDuration = duration;
+          completer.complete(duration);
+        }
+      });
+      
+      // Charger le fichier
+      await tempPlayer.setSource(DeviceFileSource(filePath));
+      
+      // Attendre la durée depuis le stream avec un timeout
+      try {
+        finalDuration = await completer.future.timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            print('⚠️ [DURÉE] Timeout en attendant la durée depuis le stream');
+            return null;
+          },
+        );
+      } catch (e) {
+        print('⚠️ [DURÉE] Erreur en attendant le stream: $e');
+      }
+      
+      // Si le stream n'a pas fonctionné, essayer getDuration() en fallback
+      if (finalDuration == null || finalDuration!.inSeconds == 0) {
+        print('⚠️ [DURÉE] Stream n\'a pas fourni de durée, tentative avec getDuration()...');
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        for (int i = 0; i < 3; i++) {
+          finalDuration = await tempPlayer.getDuration();
+          if (finalDuration != null && finalDuration!.inSeconds > 0) {
+            break;
+          }
+          if (i < 2) {
+            await Future.delayed(const Duration(milliseconds: 300));
+          }
+        }
+      }
+      
+      // Nettoyer
+      await durationSubscription?.cancel();
+      if (tempPlayer != null) {
+        try {
+          await tempPlayer.dispose();
+        } catch (e) {
+          print('⚠️ [DURÉE] Erreur lors du dispose du player: $e');
+        }
+      }
+      tempPlayer = null;
+      _isCalculatingDuration = false;
+      
+      if (finalDuration != null && finalDuration!.inSeconds > 0) {
+        print('✅ [DURÉE] Durée récupérée: ${finalDuration!.inSeconds} secondes pour $filePath');
+        return finalDuration;
+      } else {
+        print('⚠️ [DURÉE] Durée est null ou 0 après toutes les tentatives');
+        return null;
+      }
     } catch (e) {
-      print('❌ Erreur lors de la récupération de la durée locale: $e');
+      print('❌ [DURÉE] Erreur lors de la récupération de la durée locale: $e');
+      await durationSubscription?.cancel();
+      if (tempPlayer != null) {
+        try {
+          await tempPlayer.dispose();
+        } catch (_) {}
+      }
+      _isCalculatingDuration = false;
       return null;
     }
   }
