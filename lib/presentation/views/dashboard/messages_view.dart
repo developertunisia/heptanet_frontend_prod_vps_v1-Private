@@ -186,10 +186,10 @@ class _MessagesViewState extends State<MessagesView> {
           return ConversationListTile(
             conversation: conversation,
             onTap: () {
-              // TODO: Temporarily disabled mark as read when opening
-              // if (conversation.unreadCount > 0) {
-              //   viewModel.markConversationAsRead(conversation.conversationId);
-              // }
+              // Mark conversation as read when opening
+              if (conversation.unreadCount > 0) {
+                viewModel.markConversationAsRead(conversation.conversationId);
+              }
               
               // Navigate to chat
               Navigator.push(
